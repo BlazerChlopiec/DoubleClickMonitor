@@ -4,6 +4,7 @@
 static unsigned long    g_ulCaughtCount = 0;
 static int              g_nMonitorButtons = 0;
 static int              g_nTimeoutMilliseconds = 0;
+static int              g_nRegisterRelease = 0;
 static DWORD            g_dwLMBPreviousTicks = 0;
 static DWORD            g_dwRMBPreviousTicks = 0;
 static DWORD            g_dwMMBPreviousTicks = 0;
@@ -20,12 +21,13 @@ BOOL APIENTRY DllMain(HANDLE hModule, DWORD reasonForCall, LPVOID lpReserved) {
     return TRUE;
 }
 
-void __declspec(dllexport) __cdecl SetMouseHook(INT nMonitorButtons, INT nTimeoutMilliseconds) {
+void __declspec(dllexport) __cdecl SetMouseHook(INT nMonitorButtons, INT nTimeoutMilliseconds, INT nRegisterRelease) {
     if (hkKey == NULL)
         hkKey = SetWindowsHookEx(WH_MOUSE_LL, LowLevelMouseProc, hInstHookDll, 0);
 
     g_nMonitorButtons = nMonitorButtons;
     g_nTimeoutMilliseconds = nTimeoutMilliseconds;
+    g_nRegisterRelease = nRegisterRelease;
 }
 
 void __declspec(dllexport) __cdecl RemoveMouseHook(void) {
@@ -43,18 +45,21 @@ unsigned long __declspec(dllexport) __cdecl GetMouseHookCaughtCount(void) {
 
 LRESULT CALLBACK LowLevelMouseProc(int nCode, WPARAM wParam, LPARAM lParam) {
     if (nCode == HC_ACTION) {
-        if (wParam == WM_LBUTTONDOWN && (g_nMonitorButtons & MHK_LEFT_MOUSE_BUTTON)) {
+        if (wParam == WM_LBUTTONDOWN && (g_nMonitorButtons & MHK_LEFT_MOUSE_BUTTON)
+            || g_nRegisterRelease && wParam == WM_LBUTTONUP && (g_nMonitorButtons & MHK_LEFT_MOUSE_BUTTON)) {
             if (CheckTicks(&g_dwLMBPreviousTicks)) {
                 // Ignore the click if it falls within the timeout period
                 return 1;
             }
         }
-        if (wParam == WM_RBUTTONDOWN && (g_nMonitorButtons & MHK_RIGHT_MOUSE_BUTTON)) {
+        if (wParam == WM_RBUTTONDOWN && (g_nMonitorButtons & MHK_RIGHT_MOUSE_BUTTON)
+            || g_nRegisterRelease && wParam == WM_RBUTTONUP && (g_nMonitorButtons & MHK_RIGHT_MOUSE_BUTTON)) {
             if (CheckTicks(&g_dwRMBPreviousTicks)) {
                 return 1;
             }
         }
-        if (wParam == WM_MBUTTONDOWN && (g_nMonitorButtons & MHK_MIDDLE_MOUSE_BUTTON)) {
+        if (wParam == WM_MBUTTONDOWN && (g_nMonitorButtons & MHK_MIDDLE_MOUSE_BUTTON)
+            || g_nRegisterRelease && wParam == WM_MBUTTONUP && (g_nMonitorButtons & MHK_MIDDLE_MOUSE_BUTTON)) {
             if (CheckTicks(&g_dwMMBPreviousTicks)) {
                 return 1;
             }

@@ -16,6 +16,7 @@ HINSTANCE   g_hInst = NULL;
 BOOL        g_bEnabled = TRUE;
 INT         g_nMonitorButtons = 0;
 INT         g_nTimeoutMilliseconds = 0;
+INT         g_registerRelease = 0;
 
 // Use a uid to uniquely identify our icon
 UINT        g_uid = 0xD343693C;
@@ -60,7 +61,7 @@ int APIENTRY wWinMain(HINSTANCE hInstance, HINSTANCE, PWSTR /*lpCmdLine*/, int n
 
         nCmdShow = 0;
         ShowWindow(hwnd, nCmdShow);
-        SetMouseHook(g_nMonitorButtons, g_nTimeoutMilliseconds);
+        SetMouseHook(g_nMonitorButtons, g_nTimeoutMilliseconds, g_registerRelease);
         
         // Main message loop:
         MSG msg;
@@ -121,9 +122,11 @@ BOOL LoadSettings(HWND hwnd) {
     UINT uRightMouseButton = 0;
     UINT uMiddleMouseButton = 0;
     UINT uTimeoutMilliseconds = 80;
+    UINT uRegisterRelease = 0;
 
     LPCTSTR lpButtonsSection = L"monitor_buttons";
     LPCTSTR lpTimeoutSection = L"timeout";
+    LPCTSTR lpExtraSection = L"extra";
 
     WCHAR szSettingsFilePath[128];
     WCHAR szSettingsError[128];    
@@ -133,7 +136,9 @@ BOOL LoadSettings(HWND hwnd) {
 
     GetFileAttributes(szSettingsFilePath);
     if (INVALID_FILE_ATTRIBUTES == GetFileAttributes(szSettingsFilePath) && GetLastError() == ERROR_FILE_NOT_FOUND) {
-        if (!WritePrivateProfileSection(lpButtonsSection, L"left=1\0right=0\0middle=0\0", szSettingsFilePath) || !WritePrivateProfileSection(lpTimeoutSection, L"milliseconds=80\0", szSettingsFilePath)) {
+        if (!WritePrivateProfileSection(lpButtonsSection, L"left=1\0right=0\0middle=0\0", szSettingsFilePath)
+            || !WritePrivateProfileSection(lpTimeoutSection, L"milliseconds=80\0", szSettingsFilePath)
+            || !WritePrivateProfileSection(lpExtraSection, L"registerRelease=0\0", szSettingsFilePath)){
             MessageBox(hwnd, szSettingsError, NULL,  MB_ICONERROR);
             return FALSE;
         }
@@ -144,6 +149,7 @@ BOOL LoadSettings(HWND hwnd) {
     uMiddleMouseButton = GetPrivateProfileInt(lpButtonsSection, L"middle", uMiddleMouseButton, szSettingsFilePath);
     g_nMonitorButtons = uLeftMouseButton * MHK_LEFT_MOUSE_BUTTON + uRightMouseButton * MHK_RIGHT_MOUSE_BUTTON + uMiddleMouseButton * MHK_MIDDLE_MOUSE_BUTTON;
     g_nTimeoutMilliseconds = GetPrivateProfileInt(lpTimeoutSection, L"milliseconds", uTimeoutMilliseconds, szSettingsFilePath);
+    g_registerRelease = GetPrivateProfileInt(lpExtraSection, L"registerRelease", uRegisterRelease, szSettingsFilePath);
 
     return TRUE;
 }
@@ -202,7 +208,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam) 
                         RemoveMouseHook();
                     }
                     else {
-                        SetMouseHook(g_nMonitorButtons, g_nTimeoutMilliseconds);
+                        SetMouseHook(g_nMonitorButtons, g_nTimeoutMilliseconds, g_registerRelease);
                     }
                     g_bEnabled = !g_bEnabled;
 
@@ -229,7 +235,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam) 
 
                         if (nResult == IDYES) {
                             g_bEnabled = TRUE;
-                            SetMouseHook(g_nMonitorButtons, g_nTimeoutMilliseconds);
+                            SetMouseHook(g_nMonitorButtons, g_nTimeoutMilliseconds, g_registerRelease);
                         }
                     }                    
 
