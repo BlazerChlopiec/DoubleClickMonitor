@@ -36,6 +36,12 @@ BOOL                LoadSettings(HWND hwnd);
 int APIENTRY wWinMain(HINSTANCE hInstance, HINSTANCE, PWSTR /*lpCmdLine*/, int nCmdShow) {
     g_hInst = hInstance;
 
+    AllocConsole();
+
+    // Redirect stdout to the console
+    FILE* fp;
+    freopen_s(&fp, "CONOUT$", "w", stdout);
+
     // Only allow one instance
     HWND hwExistingHandle = FindWindow(szWindowClass, NULL);
 

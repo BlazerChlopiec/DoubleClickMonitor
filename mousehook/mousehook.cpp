@@ -1,5 +1,6 @@
 #include "pch.h"
 #include "mousehook.h"
+#include <stdio.h>
 
 static unsigned long    g_ulCaughtCount = 0;
 static int              g_nMonitorButtons = 0;
@@ -71,9 +72,12 @@ LRESULT CALLBACK LowLevelMouseProc(int nCode, WPARAM wParam, LPARAM lParam) {
 
 BOOL CheckTicks(DWORD *dwPreviousTicks) {
     DWORD dwTicks = GetTickCount();
+    printf("Tick Delta: %lu\n", dwTicks);
     DWORD dwTickDelta = dwTicks - *dwPreviousTicks;
 
     *dwPreviousTicks = dwTicks;
+
+    printf("Tick Delta: %lu\n", dwTickDelta);
 
     if (dwTickDelta <= (DWORD)g_nTimeoutMilliseconds) {
         g_ulCaughtCount++;
@@ -81,6 +85,5 @@ BOOL CheckTicks(DWORD *dwPreviousTicks) {
     }
     else {
         return FALSE;
-    }
-       
+    } 
 }
