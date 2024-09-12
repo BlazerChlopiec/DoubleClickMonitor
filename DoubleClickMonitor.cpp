@@ -126,9 +126,9 @@ BOOL LoadSettings(HWND hwnd) {
     UINT uLeftMouseButton = 1;
     UINT uRightMouseButton = 0;
     UINT uMiddleMouseButton = 0;
-    UINT uMouseDownTimeoutMs = 70;
+    UINT uMouseDownTimeoutMs = 30;
     UINT uMouseUpTimeoutMs = 30;
-    UINT uRegisterRelease = 0;
+    UINT uRegisterRelease = 1;
 
     LPCTSTR lpButtonsSection = L"monitor_buttons";
     LPCTSTR lpTimeoutSection = L"timeout";
@@ -143,8 +143,8 @@ BOOL LoadSettings(HWND hwnd) {
     GetFileAttributes(szSettingsFilePath);
     if (INVALID_FILE_ATTRIBUTES == GetFileAttributes(szSettingsFilePath) && GetLastError() == ERROR_FILE_NOT_FOUND) {
         if (!WritePrivateProfileSection(lpButtonsSection, L"left=1\0right=0\0middle=0\0", szSettingsFilePath)
-            || !WritePrivateProfileSection(lpTimeoutSection, L"milliseconds=80\0", szSettingsFilePath)
-            || !WritePrivateProfileSection(lpExtraSection, L"registerRelease=0\0", szSettingsFilePath)){
+            || !WritePrivateProfileSection(lpTimeoutSection, L"mouseDownTimeoutMs=30\0mouseUpTimeoutMs=30\0", szSettingsFilePath)
+            || !WritePrivateProfileSection(lpExtraSection, L"registerRelease=1\0", szSettingsFilePath)){
             MessageBox(hwnd, szSettingsError, NULL,  MB_ICONERROR);
             return FALSE;
         }
