@@ -1,5 +1,5 @@
 extern "C" {
-	void __declspec(dllexport) __cdecl SetMouseHook(INT nMonitorButtons, INT nTimeoutMilliseconds, INT nRegisterRelease);
+	void __declspec(dllexport) __cdecl SetMouseHook(INT nMonitorButtons, INT nMouseDownTimeoutMs, INT nMouseUpTimeoutMs, INT nRegisterRelease);
 	void __declspec(dllexport) __cdecl RemoveMouseHook(void);
 	unsigned long __declspec(dllexport) __cdecl GetMouseHookCaughtCount(void);
 }

@@ -15,7 +15,8 @@
 HINSTANCE   g_hInst = NULL;
 BOOL        g_bEnabled = TRUE;
 INT         g_nMonitorButtons = 0;
-INT         g_nTimeoutMilliseconds = 0;
+INT         g_nMouseDownTimeoutMs = 0;
+INT         g_nMouseUpTimeoutMs;
 INT         g_registerRelease = 0;
 
 // Use a uid to uniquely identify our icon
@@ -36,11 +37,9 @@ BOOL                LoadSettings(HWND hwnd);
 int APIENTRY wWinMain(HINSTANCE hInstance, HINSTANCE, PWSTR /*lpCmdLine*/, int nCmdShow) {
     g_hInst = hInstance;
 
-    AllocConsole();
-
-    // Redirect stdout to the console
-    FILE* fp;
-    freopen_s(&fp, "CONOUT$", "w", stdout);
+   //AllocConsole();
+   //FILE* fp;
+   //freopen_s(&fp, "CONOUT$", "w", stdout);
 
     // Only allow one instance
     HWND hwExistingHandle = FindWindow(szWindowClass, NULL);
@@ -67,7 +66,7 @@ int APIENTRY wWinMain(HINSTANCE hInstance, HINSTANCE, PWSTR /*lpCmdLine*/, int n
 
         nCmdShow = 0;
         ShowWindow(hwnd, nCmdShow);
-        SetMouseHook(g_nMonitorButtons, g_nTimeoutMilliseconds, g_registerRelease);
+        SetMouseHook(g_nMonitorButtons, g_nMouseDownTimeoutMs, g_nMouseUpTimeoutMs, g_registerRelease);
         
         // Main message loop:
         MSG msg;
@@ -127,7 +126,8 @@ BOOL LoadSettings(HWND hwnd) {
     UINT uLeftMouseButton = 1;
     UINT uRightMouseButton = 0;
     UINT uMiddleMouseButton = 0;
-    UINT uTimeoutMilliseconds = 80;
+    UINT uMouseDownTimeoutMs = 70;
+    UINT uMouseUpTimeoutMs = 30;
     UINT uRegisterRelease = 0;
 
     LPCTSTR lpButtonsSection = L"monitor_buttons";
@@ -154,7 +154,8 @@ BOOL LoadSettings(HWND hwnd) {
     uRightMouseButton = GetPrivateProfileInt(lpButtonsSection, L"right", uRightMouseButton, szSettingsFilePath);
     uMiddleMouseButton = GetPrivateProfileInt(lpButtonsSection, L"middle", uMiddleMouseButton, szSettingsFilePath);
     g_nMonitorButtons = uLeftMouseButton * MHK_LEFT_MOUSE_BUTTON + uRightMouseButton * MHK_RIGHT_MOUSE_BUTTON + uMiddleMouseButton * MHK_MIDDLE_MOUSE_BUTTON;
-    g_nTimeoutMilliseconds = GetPrivateProfileInt(lpTimeoutSection, L"milliseconds", uTimeoutMilliseconds, szSettingsFilePath);
+    g_nMouseDownTimeoutMs = GetPrivateProfileInt(lpTimeoutSection, L"mouseDownTimeoutMs", uMouseDownTimeoutMs, szSettingsFilePath);
+    g_nMouseUpTimeoutMs = GetPrivateProfileInt(lpTimeoutSection, L"MouseUpTimeoutMs", uMouseUpTimeoutMs, szSettingsFilePath);
     g_registerRelease = GetPrivateProfileInt(lpExtraSection, L"registerRelease", uRegisterRelease, szSettingsFilePath);
 
     return TRUE;
@@ -214,7 +215,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam) 
                         RemoveMouseHook();
                     }
                     else {
-                        SetMouseHook(g_nMonitorButtons, g_nTimeoutMilliseconds, g_registerRelease);
+                        SetMouseHook(g_nMonitorButtons, g_nMouseDownTimeoutMs, g_nMouseUpTimeoutMs, g_registerRelease);
                     }
                     g_bEnabled = !g_bEnabled;
 
@@ -241,7 +242,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam) 
 
                         if (nResult == IDYES) {
                             g_bEnabled = TRUE;
-                            SetMouseHook(g_nMonitorButtons, g_nTimeoutMilliseconds, g_registerRelease);
+                            SetMouseHook(g_nMonitorButtons, g_nMouseDownTimeoutMs, g_nMouseUpTimeoutMs, g_registerRelease);
                         }
                     }                    
 
