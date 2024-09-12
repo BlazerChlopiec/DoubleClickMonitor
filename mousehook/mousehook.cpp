@@ -46,44 +46,63 @@ unsigned long __declspec(dllexport) __cdecl GetMouseHookCaughtCount(void) {
 
 LRESULT CALLBACK LowLevelMouseProc(int nCode, WPARAM wParam, LPARAM lParam) {
     if (nCode == HC_ACTION) {
-        if (wParam == WM_LBUTTONDOWN && (g_nMonitorButtons & MHK_LEFT_MOUSE_BUTTON)
-            || g_nRegisterRelease && wParam == WM_LBUTTONUP && (g_nMonitorButtons & MHK_LEFT_MOUSE_BUTTON)) {
-            if (CheckTicks(&g_dwLMBPreviousTicks)) {
+
+    #pragma region ButtonDown
+        if (wParam == WM_LBUTTONDOWN && (g_nMonitorButtons & MHK_LEFT_MOUSE_BUTTON)) {
+            if (CheckTicks(&g_dwLMBPreviousTicks, 1)) {
                 // Ignore the click if it falls within the timeout period
                 return 1;
             }
         }
-        if (wParam == WM_RBUTTONDOWN && (g_nMonitorButtons & MHK_RIGHT_MOUSE_BUTTON)
-            || g_nRegisterRelease && wParam == WM_RBUTTONUP && (g_nMonitorButtons & MHK_RIGHT_MOUSE_BUTTON)) {
-            if (CheckTicks(&g_dwRMBPreviousTicks)) {
+        if (wParam == WM_RBUTTONDOWN && (g_nMonitorButtons & MHK_RIGHT_MOUSE_BUTTON)){
+            if (CheckTicks(&g_dwRMBPreviousTicks, 1)) {
                 return 1;
             }
         }
-        if (wParam == WM_MBUTTONDOWN && (g_nMonitorButtons & MHK_MIDDLE_MOUSE_BUTTON)
-            || g_nRegisterRelease && wParam == WM_MBUTTONUP && (g_nMonitorButtons & MHK_MIDDLE_MOUSE_BUTTON)) {
-            if (CheckTicks(&g_dwMMBPreviousTicks)) {
+        if (wParam == WM_MBUTTONDOWN && (g_nMonitorButtons & MHK_MIDDLE_MOUSE_BUTTON)) {
+            if (CheckTicks(&g_dwMMBPreviousTicks, 1)) {
                 return 1;
             }
         }
+    #pragma endregion
+
+    #pragma region ButtonUp
+        if (g_nRegisterRelease) {
+            if (wParam == WM_LBUTTONUP && (g_nMonitorButtons & MHK_LEFT_MOUSE_BUTTON)) {
+                SetTicks(&g_dwLMBPreviousTicks);
+            }
+            if (wParam == WM_RBUTTONUP && (g_nMonitorButtons & MHK_RIGHT_MOUSE_BUTTON)) {
+                SetTicks(&g_dwRMBPreviousTicks);
+            }
+            if (wParam == WM_MBUTTONUP && (g_nMonitorButtons & MHK_MIDDLE_MOUSE_BUTTON)) {
+                SetTicks(&g_dwMMBPreviousTicks);
+            }
+        }
+    #pragma endregion
     }
 
     return CallNextHookEx(hkKey, nCode, wParam, lParam);
 }
 
-BOOL CheckTicks(DWORD *dwPreviousTicks) {
-    DWORD dwTicks = GetTickCount();
-    printf("Tick Delta: %lu\n", dwTicks);
-    DWORD dwTickDelta = dwTicks - *dwPreviousTicks;
+BOOL CheckTicks(DWORD *dwPreviousTicks, int inputDown) {
+    DWORD tickDelta = SetTicks(dwPreviousTicks);
 
-    *dwPreviousTicks = dwTicks;
+    //printf("Tick Delta: %lu\n", tickDelta);
 
-    printf("Tick Delta: %lu\n", dwTickDelta);
-
-    if (dwTickDelta <= (DWORD)g_nTimeoutMilliseconds) {
+    if (tickDelta <= (DWORD)g_nTimeoutMilliseconds) {
         g_ulCaughtCount++;
         return TRUE;
     }
     else {
         return FALSE;
     } 
+}
+
+DWORD SetTicks(DWORD* dwPreviousTicks) {
+    DWORD dwTicks = GetTickCount();
+    DWORD dwTickDelta = dwTicks - *dwPreviousTicks;
+
+    *dwPreviousTicks = dwTicks;
+
+    return dwTickDelta;
 }

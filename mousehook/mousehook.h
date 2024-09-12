@@ -10,4 +10,5 @@ extern "C" {
 
 BOOL APIENTRY DllMain(HANDLE hModule, DWORD  reasonForCall, LPVOID lpReserved);
 LRESULT CALLBACK LowLevelMouseProc(int nCode, WPARAM wParam, LPARAM lParam);
-BOOL CheckTicks(DWORD* dwPreviousTicks);
+BOOL CheckTicks(DWORD* dwPreviousTicks, int inputDown);
+DWORD SetTicks(DWORD* dwPreviousTicks);
